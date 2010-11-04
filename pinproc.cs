@@ -5,12 +5,19 @@
 // 
 //   gmcs pinproc.cs testmain.cs
 //   mono pinproc.exe
-// 
+//
 using System;
 using System.Runtime.InteropServices;
 
 namespace pinproc
 {
+	public enum LogLevel {
+		Verbose = 0,
+		Info = 1,
+		Warning = 2,
+		Error = 3
+	};
+	
 	public enum MachineType {
 		Invalid = 0,
 		Custom = 1,
@@ -152,113 +159,117 @@ namespace pinproc
 		}
 	};
 	
-	public class PinPROC
+	public abstract class PinProc
 	{
-		// Status: Good
+		// General Methods //
+		
+		// Status: Presumed good
 		[DllImport("libpinproc")]
-		private static extern string PRGetLastErrorText();
+		public static extern void PRLogSetLevel(LogLevel level);
 		
 		// Status: Good
 		[DllImport("libpinproc")]
-		private static extern IntPtr PRCreate(MachineType machineType);
+		public static extern string PRGetLastErrorText();
 		
 		// Status: Good
 		[DllImport("libpinproc")]
-		private static extern void PRDelete(IntPtr handle);
-
+		public static extern IntPtr PRCreate(MachineType machineType);
+		
+		// Status: Good
 		[DllImport("libpinproc")]
-		private static extern Result PRReset(IntPtr handle, UInt32 flags);
+		public static extern void PRDelete(IntPtr handle);
+
+		// Staus: Presumed good
+		[DllImport("libpinproc")]
+		public static extern Result PRReset(IntPtr handle, UInt32 flags);
 
 		// Status: Good
 		[DllImport("libpinproc")]
-		private static extern Result PRFlushWriteData(IntPtr handle);
-
-		// Status: Good
+		public static extern Result PRFlushWriteData(IntPtr handle);
+		
+		
+		// Driver Methods //
+		
+		
+		// Status: Presumed good
 		[DllImport("libpinproc")]
-		private static extern Result PRDMDUpdateConfig(IntPtr handle, ref DMDConfig config);
-
+		public static extern Result PRDriverWatchdogTickle(IntPtr handle);
+		
+		
 		// Status: Soft tested
 		[DllImport("libpinproc")]
-		private static extern Result PRDriverGetState(IntPtr handle, byte driverNum, ref DriverState driverState);
+		public static extern Result PRDriverGetState(IntPtr handle, byte driverNum, ref DriverState driverState);
 		
 		// Status: Soft tested
 		[DllImport("libpinproc")]
-		private static extern Result PRDriverUpdateState(IntPtr handle, ref DriverState driverState);
+		public static extern Result PRDriverUpdateState(IntPtr handle, ref DriverState driverState);
 
+		// Status: UNTESTED
 		[DllImport("libpinproc")]
-		private static extern Result PRDriverUpdateGlobalConfig(IntPtr handle, ref DriverGlobalConfig driverGlobalConfig);
+		public static extern Result PRDriverUpdateGlobalConfig(IntPtr handle, ref DriverGlobalConfig driverGlobalConfig);
+		
+		
+		// Status: UNTESTED
+		[DllImport("libpinproc")]
+		public static extern void PRDriverStateDisable(ref DriverState state);
+		
+		// Status: UNTESTED
+		[DllImport("libpinproc")]
+		public static extern void PRDriverStatePulse(ref DriverState state, byte milliseconds);
+		
+		// Status: UNTESTED
+		[DllImport("libpinproc")]
+		public static extern void PRDriverStateSchedule(ref DriverState state, UInt32 schedule, byte cycleSeconds, bool now);
+		
+		// Status: UNTESTED
+		[DllImport("libpinproc")]
+		public static extern void PRDriverStatePatter(ref DriverState state, UInt16 millisecondsOn, UInt16 millisecondsOff, UInt16 originalOnTime);
 
+		// Status: UNTESTED
 		[DllImport("libpinproc")]
-		private static extern Result PRDriverWatchdogTickle(IntPtr handle);
+		public static extern void PRDriverStatePulsedPatter(ref DriverState state, UInt16 millisecondsOn, UInt16 millisecondsOff, UInt16 patterTime);
+
+		
 		
 		// Status: Good
 		[DllImport("libpinproc")]
-		private static extern int PRGetEvents(IntPtr handle, [In, Out] Event[] events, int maxEvents);
+		public static extern UInt16 PRDecode(MachineType machineType, string str);
 		
-		[DllImport("libpinproc")]
-		private static extern Result PRSwitchUpdateConfig(IntPtr handle, ref SwitchConfig switchConfig);
 		
-		[DllImport("libpinproc")]
-		private static extern Result PRSwitchUpdateRule(IntPtr handle, byte switchNum, EventType eventType, ref SwitchRule rule, DriverState[] linkedDrivers, int numDrivers);
+		
+		// Switch & Event Methods //
+		
 		
 		// Status: Good
 		[DllImport("libpinproc")]
-		private static extern UInt16 PRDecode(MachineType machineType, string str);
+		public static extern int PRGetEvents(IntPtr handle, [In, Out] Event[] events, int maxEvents);
+		
+		// Status: UNTESTED
+		[DllImport("libpinproc")]
+		public static extern Result PRSwitchUpdateConfig(IntPtr handle, ref SwitchConfig switchConfig);
+		
+		// Status: UNTESTED
+		[DllImport("libpinproc")]
+		public static extern Result PRSwitchUpdateRule(IntPtr handle, byte switchNum, EventType eventType, ref SwitchRule rule, DriverState[] linkedDrivers, int numDrivers);
+		
+		// Status: UNTESTED
+		[DllImport("libpinproc")]
+		public static extern Result PRSwitchGetStates(IntPtr handle, [In, Out] EventType[] switchStates, UInt16 numSwitches);
 		
 		
 		
-		static public void Test()
-		{
-			Console.WriteLine("decode {0}", PRDecode(MachineType.WPC, "C08"));
-			
-			Console.WriteLine("PRCreate...");
-			IntPtr h = PRCreate(MachineType.WPC);
-			
-			if (h == IntPtr.Zero)
-			{
-				Console.WriteLine("PRCreate failed: {0}", PRGetLastErrorText());
-				return;
-			}
+		// DMD Methods //
+		
+		
+		// Status: UNTESTED
+		[DllImport("libpinproc")]
+		public static extern Result PRDMDDraw(IntPtr handle, byte[] dots);
+		
+		// Status: Good
+		[DllImport("libpinproc")]
+		public static extern Result PRDMDUpdateConfig(IntPtr handle, ref DMDConfig config);
 
-			Console.WriteLine("PRCreate successful.");
-			
-			// DriverState state = new DriverState();
-			// state.DriverNum = 47;
-			// state.PatterEnable = true;
-			// PRDriverUpdateState(h, ref state);
-			// 
-			// state.PatterEnable = false;
-			// 
-			// PRDriverGetState(h, 47, ref state);
-			// Console.WriteLine("get state = {0} patter en = {1}", state, state.PatterEnable);
-			
-			// Setup the DMD to generate some events:
-			DMDConfig dmdConfig = new DMDConfig(128, 32);
-			PRDMDUpdateConfig(h, ref dmdConfig);
-			
-			PRFlushWriteData(h);
-			
-			try
-			{
-				Console.WriteLine("sleep...");
-				System.Threading.Thread.Sleep(100);
-				Event[] events = new Event[16];
-				int numEvents;
-				{
-					numEvents = PRGetEvents(h, events, events.Length);
-					Console.WriteLine("got {0} events", numEvents);
-					for (int i = 0; i < numEvents; i++)
-					{
-						Console.WriteLine("  {0}", events[i]);
-					}
-				}
-			}
-			finally
-			{
-				PRDelete(h);
-			}
-			Console.WriteLine("Done.");
-		}
+
 	}
 }
 
