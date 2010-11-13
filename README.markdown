@@ -5,18 +5,32 @@
 netpinproc is a C# wrapper for [libpinproc](http://github.com/preble/libpinproc).
 The initial version was started on 10/31/2010 and was written by Adam Preble.
 
+### pinproc.cs
+
+PinProc, a C# wrapper class for libpinproc.  Basically a set of P/Invoke methods and structures to make it pretty easy to call libpinproc functions from .Net.  Note that this requires that libpinproc be available as a DLL (on Windows) or a dylib on Mac or Linux.
+
+### ProcDevice.cs
+
+ProcDevice, a wrapper class for PinProc, which makes controlling the P-ROC hardware even smoother in a .Net environment.  Although it is far from complete, it is a useful as an example of how to call PinProc's methods.  If you improve upon it we would be happy to incorporate your changes.
+
+### testmain.cs
+
+A test Main() implementation that demonstrates how to use the ProcDevice class to read events.  Also discusses how drivers (coils, lamps) should be manipulated.
+
 
 ## Status
 
-netpinproc was developed under Mono and has not been tested in an actual Windows .Net environment.  In fact, as of this typing it has not actually been tested with the P-ROC hardware.
+netpinproc was developed under Mono and has not been tested in an actual Windows .Net environment.  While portions of PinProc have been tested with actual hardware, much of it has not.  Please use care when testing this library on an actual pinball machine.  Please see the license statement below.
 
 
 ## Usage
 
+To run using MonoDevelop, create a new command line application and add the files testmain.cs, pinproc.cs, and ProcDevice.cs.
+
 To compile and run with Mono:
 
-    gmcs PinPROC.cs
-    mono PinPROC.exe
+    gmcs testmain.cs pinproc.cs ProcDevice.cs
+    mono testmain.exe
 
 If you happen to be running netpinproc under Mac OS X, due to a bug in Mono/glib, you will need to create a .config file to help Mono find libpinproc.dylib.  In .Net style, if your .exe is pinproc.exe, create a pinproc.exe.config with the following content:
 

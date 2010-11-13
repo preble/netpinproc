@@ -2,6 +2,9 @@ using System;
 using System.Collections.Generic;
 namespace pinproc
 {
+	/// <summary>
+	/// Wrapper for netpinproc (libpinproc native interface).
+	/// </summary>
 	public class ProcDevice
 	{
 		public IntPtr ProcHandle;
@@ -9,6 +12,9 @@ namespace pinproc
 		public ProcDevice(MachineType machineType)
 		{
 			ProcHandle = PinProc.PRCreate(machineType);
+			
+			if (ProcHandle == IntPtr.Zero)
+				throw new InvalidOperationException(PinProc.PRGetLastErrorText());
 		}
 		
 		public void Close()
@@ -46,6 +52,15 @@ namespace pinproc
 		public void TickleWatchdog()
 		{
 			PinProc.PRDriverWatchdogTickle(ProcHandle);
+		}
+		
+		
+		public void PulseDriver(ushort driverNum, byte milliseconds)
+		{
+			DriverState state = new DriverState();
+			state.DriverNum = driverNum;
+			PinProc.PRDriverStatePulse(ref state, milliseconds);
+			PinProc.PRDriverUpdateState(ProcHandle, ref state);
 		}
 	}
 }
